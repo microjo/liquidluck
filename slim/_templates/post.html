@@ -7,15 +7,20 @@
 {% endblock %}
 
 {% block afterstyle %}
-<link rel="stylesheet" href="{{ static_url('syntax.css') }}" />
+{% if post.get('tags') %}
+<meta name="keywords" content="{{ post.tags|join(',') }}" />
+{% endif %}
+<link rel="stylesheet" href="{{ static_url('css/syntax.css') }}" />
 {% endblock %}
 
 
-{% block container %}
-<h1 class="ui-article-title">
+{% block dashboard %}
+<h2 class="ui-article-title">
     <a href="{{content_url(post.slug)}}" rel="self">{{post.title}}</a>
-</h1>
-<small><a href="{{content_url(post.date.year)}}" rel=archive"><time class="ui-article-time" datetime="{{post.date}}">{{post.date.strftime("%a, %b %d, %Y")}}</time></a></small>
+</h2>
+<p class="ui-article-meta">
+    Created at <a href="{{content_url(post.date.year)}}" rel=archive"><time class="ui-article-time" datetime="{{post.date}}">{{post.date.strftime("%a, %b %d, %Y")}}</time></a>
+</p>
 <div class="ui-article">
     <div class="ui-article-content">
         {{ post.content }}
@@ -36,21 +41,4 @@
         </p>
     </div>
 </div>
-{% endblock %}
-
-{% block afterjquery %}
-<script type="text/javascript">
-    $(function(){$(document).keydown(function(e){
-            var tagName = e.target.tagName.toLowerCase();
-            if("input" == tagName|| "textarea" == tagName){return ;}
-            if(37 == e.keyCode || 72 == e.keyCode){
-                var url = $('#prev-article').attr('href');
-            }else if(39 == e.keyCode || 76 == e.keyCode){
-                var url = $('#next-article').attr('href');
-            }
-            var url = url || '';
-            if(url){location.assign(url);}
-        });
-    });
-</script>
 {% endblock %}

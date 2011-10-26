@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+
+{% block title %}{{context.sitename}} - {{title|capitalize}}{% endblock %}
+
+{% block dashboard %}
+<h2 id="page-title">{{title|upper}}</h2>
+<ul id="article-list" class="ui-list fn-clear">
+    {% for post in pager.posts %}
+    <li class="ui-list-item">
+    <h3 class="ui-article-title"><a href="{{content_url(post.slug)}}">{{post.title}}</a></h3>
+    <p class="ui-article-meta">
+        Created at <a href="{{content_url(post.date.year)}}" rel=archive"><time class="ui-article-time" datetime="{{post.date}}">{{post.date.strftime("%a, %b %d, %Y")}}</time></a>
+        »
+        <span class="ui-tags">
+        {% for tag in post.get('tags',[]) %}
+        <a href="{{content_url('tag', tag)}}" class="ui-tag" rel="tag">{{tag}}</a>
+        {% endfor %}
+        </span>
+    </p>
+    </li>
+    {% endfor %}
+</ul>
+{% if pager.pages > 1 %}
+<div id="pagination">
+    {% if pager.prev %}
+        {% if pager.prev == 1 %}
+        {% if pager.sub_folder == 'page' %}
+        <a class="prev" href="{{ content_url(pager.folder) }}">«Prev</a>
+        {% else %}
+        <a class="prev" href="{{ content_url(pager.folder, pager.sub_folder) }}">«Prev</a>
+        {% endif %}
+        {% else %}
+        <a class="prev" href="{{ content_url(pager.folder, pager.sub_folder, pager.prev) }}">«Prev</a>
+        {% endif %}
+    {% else %}
+    <span class="prev">«Prev</span>
+    {% endif %}
+    <span class="fn-current">{{pager.page}}</span>
+    {% if pager.next %}
+    <a class="next" href="{{ content_url(pager.folder, pager.sub_folder, pager.next) }}">Next»</a>
+    {% else %}
+    <span class="next">Next»</span>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

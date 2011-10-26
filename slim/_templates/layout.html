@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>{% block title %}{{context.sitename}}{% endblock %}</title>
+        <script>if (top !== self) top.location = self.location;</script>
+        {% block author %}<meta name="author" content="{{ context.author }}" />{% endblock %}
+        {% block beforestyle %}{% endblock %}
+        <link rel="alternate" type="application/rss+xml" href="{{content_url('feed.xml')}}" title="{{context.sitename}} Feed" />
+        <link rel="stylesheet" href="{{ static_url('css/slim.css') }}" />
+        {% block afterstyle %}{% endblock %}
+    </head>
+    <body>
+        <div id="header" class="fn-clear">
+            <div class="wrapper">
+                <div id="brand" class="fn-left">
+                    <h1><a href="/">{{ context.sitename }}</a></h1>
+                    <p id="brand-description">Love its people, but never trust its government</p>
+                </div>
+                <ul id="nav" class="fn-right">
+                    <li class="nav-item"><a href="/">Home</a></li>
+                    <li class="nav-item"><a href="/tag/">Tags</a></li>
+                </ul>
+            </div>
+        </div>
+        <div id="container" class="fn-clear">
+            <div class="wrapper">
+                {% block container %}
+                <div id="dasharea" class="fn-left">
+                    {% block dashboard %}
+                    {% endblock %}
+                </div>
+                <div id="sidebar" class="fn-right">
+                    {% block sidebar %}
+                    <div class="ui-widget">
+                        <h3 class="ui-widget-title">Archive</h3>
+                        <ul class="ui-widget-list">
+                            {% for year in status.years %}
+                            <li><a href="{{content_url(year)}}">{{year}}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="ui-widget">
+                        <h3 class="ui-widget-title">Tags</h3>
+                        <ul class="tagcloud">
+                            {% for tag in status.tags %}
+                            <li><a href="{{ content_url('tag', tag.name) }}" style="font-size: {{tag.size}}%" title="{{tag.count}} posts">{{ tag.name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endblock %}
+                </div>
+            </div>
+            {% endblock %}
+        </div>
+        <div id="footer">
+            <div class="wrapper">
+                <div class="copyrith ft-right">
+                    Copyright by <a href="{{context.siteurl}}">{{ context.sitename }}</a> |
+                    Powered by <a href="http://github.com/lepture/liquidluck">Felix Felicis</a> |
+                    Designed by <a href="http://lepture.com">lepture</a>
+
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
