@@ -28,21 +28,35 @@ article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section {
 }
 pre {
     overflow: auto;
-    font: normal normal 12px/1.3 monospace;
     max-height: 45em;
     padding: 8px;
 }
+pre, code, .literal {
+    font: normal normal 0.8em/1.3 monaco, menlo, monospace;
+}
 code, .literal {
-    font: normal normal 12px/1.3 monospace;
+    padding: .4em;
+    color: #565656;
 }
 input,select,textarea{
     font-size:100%;
 }
 table{
+    margin: 1em 0;
     border-collapse:collapse;border-spacing:0;
+    border: 1px solid #dadada;
 }
-th{
+thead{
+    background: #999;
+    color: #fff;
+    border: 1px solid #888;
+}
+th, td{
     text-align:inherit;
+    padding: 0.2em 0.4em;
+}
+tbody tr:nth-child(2n) {
+    background: #eee;
 }
 fieldset,img,a img{
     border:0;
@@ -70,7 +84,7 @@ caption,th {
 h2,h3,h4,h5,h6 {
     font-size: 100%;
     font-weight: bold;
-    font-family: Helvetica,arial,sans-serif;
+    font-family: "Lato", Helvetica,arial,sans-serif;
 }
 h1 {
     font-size: 1.6em;
@@ -182,6 +196,7 @@ blockquote::after {
 html, body {
     color: #080000;
     background: #fdfdfa;
+    font-family: "Volkhov", "Georgia", "Times New Roman", "STHeiti", "Microsoft YaHei", "WenQuanYi Micro Hei", serif;
 }
 h1, h2, h3, h4, strong {
     color: #000;
@@ -212,7 +227,7 @@ a:hover {
 }
 #nav a {
     display: inline-block;
-    border-top: 3px solid #7d7d7c;
+    border-top: 3px solid transparent;
     padding: 0 0.6em;
     line-height: 2.4em;
     color: #707065;
@@ -236,28 +251,22 @@ a:hover {
     height: 2.4em;
 }
 .hentry {padding: 0 10px;}
-@media only screen and (max-device-width: 480px) {
-    #header nav { height: 36px; }
-    #nav a { font-size: 13px; line-height: 36px; }
-    #nav li { height: 36px; }
-    #search-form { display: none; border: 0 none; }
-}
 /** end header **/
 /** footer **/
 #footer {
     padding: 1.8em 0 1em;
     font-size: 0.8em;
-    font-family: Georgia, "Times New Roman", serif;
     max-width: 650px;
     *width: 650px;
     margin: 0 auto;
     text-align: right;
     color: #969696;
 }
-#footer .love, #footer .love a { color: #ddd; }
-#foote .love:before {
-    content: "♥",
-    color: "#ddd",
+#footer .bio { color: #ddd; }
+#footer .bio:before {
+    content: "♥";
+    color: #e3513b;
+    margin-right: 0.3em;
 }
 /** end footer **/
 /** search **/
@@ -288,7 +297,6 @@ a:hover {
 }
 .entry-meta {
     font-style: italic;
-    font-family: Georgia, "Times New Roman", serif;
     border-top: 3px double #d0d0d0;
     border-bottom: 3px double #d0d0d0;
     margin: 1em 0 2em;
@@ -323,16 +331,12 @@ a:hover {
 }
 .entry-content {
     line-height: 1.55em;
-    font-family: Georgia, "Times New Roman", "STHeiti", "Microsoft YaHei", "WenQuanYi Micro Hei", serif;
 }
 .entry-content .section {
-    padding: 9px 0;
+    padding: 0.6em 0;
 }
 .entry-content .section .section {
-    padding: 0 0 9px;
-}
-.entry-content h3 {
-    font-size: 14px;
+    padding: 0 0 0.6em;
 }
 .entry-content p {
     margin: 1em 0;
@@ -353,6 +357,7 @@ a:hover {
 .highlight {
     border: 1px dashed #ddd;
     padding: 1px 5px 3px 1px;
+    margin: 1em 0;
 }
 .page-content ul {
     list-style-type: none;
@@ -361,9 +366,6 @@ a:hover {
 /* @end entry */
 
 /* @begin entry-list */
-#entry-list {
-    font-family: Georgia, "Times New Roman", "STHeiti", "Microsoft YaHei", "WenQuanYi Micro Hei", serif;
-}
 #entry-list li{
     position: relative;
     padding: 6px 0;
@@ -410,6 +412,35 @@ a:hover {
     padding: 3px 9px;
 }
 .tagcloud li {
-    display: inline;
-    padding: 3px 5px;
+    display: inline-block;
+    padding: 0.1em 0.27em;
+}
+#github {
+    position: fixed;
+    top: 40px;
+    left: -40px;
+    width: 200px;
+    line-height: 28px;
+    text-align: center;
+    color: white;
+    background-color: #202020;
+    border: 1px solid #000;
+    font-size: 0.85em;
+    -webkit-transform: rotate(-45deg);
+    -moz-transform: rotate(-45deg);
+    transform: rotate(-45deg);
+    *display: none;
+}
+#github a {
+    display: block;
+    color: white;
+    border: 1px solid #696969;
+    text-shadow: 0 0 0 #fff;
+}
+@media only screen and (max-device-width: 480px) {
+    #header nav { height: 36px; }
+    #nav a { font-size: 13px; line-height: 36px; }
+    #nav li { height: 36px; }
+    #nav-work, #search-form { display: none; border: 0 none; }
+    #github {display:none;}
 }
