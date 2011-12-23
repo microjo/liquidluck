@@ -8,13 +8,12 @@
 
 {% block afterstyle %}
 <link rel="canonical" href="{{ content_url(post.slug) }}" />
-<link rel="stylesheet" href="{{ static_url('css/syntax.css') }}" />
+<link rel="stylesheet" href="{{ static_url('syntax.css') }}" />
 {% endblock %}
 
 {% block entrytitle%}<a href="{{content_url(post.slug)}}" rel="self">{{post.title}}</a>{% endblock %}
 
 {% block container %}
-<div class="rdbWrapper" data-show-read="1" data-show-send-to-kindle="1"></div>
 <div class="entry">
     <div class="entry-content">
         {{ post.content }}
@@ -35,13 +34,25 @@
     Created at: 
     <a href="/{{post.date.year}}/" rel="archive"><time class="updated" datetime="{{post.date}}" pubdate>{{post.date.strftime("%a, %b %d, %Y")}}</time></a>
     </p>
-    {%if post.tags%}
+    {% if post.tags %}
     <p class="entry-tags fn-left">
     Tagged in:
     {% for tag in post.get('tags',[]) %}
     <a href="{{content_url('tag', tag)}}" class="tag" rel="tag">{{tag}}</a>
     {% endfor %}
     </p>
-    {%endif%}
+    {% endif %}
 </div>
+{% if context.disqus and post.public %}
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = '{{context.disqus}}';
+    var disqus_title = '{{post.title}}';
+    (function() {
+     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+     dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+     (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+     })();
+</script>
+{% endif %}
 {% endblock %}
