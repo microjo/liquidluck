@@ -3,6 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <title>{% block title %}{{context.sitename}}{% endblock %}</title>
+        {% if context.gravatar %}<link rel="shortcut icon" href="{{gravatar_url(16)}}" />{% endif %}
         <script>if (top !== self) top.location = self.location;</script>
         <meta name="HandheldFriendly" content="True" />
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0" />

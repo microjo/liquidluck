@@ -4,6 +4,7 @@
 import os
 import sys
 import hashlib
+import urllib
 from math import log
 
 from liquidluck.writers import Writer, FeedMixin, PagerMixin
@@ -13,6 +14,17 @@ from liquidluck.namespace import ns, NameSpace
 from liquidluck import logger
 
 _hash_cache = {}
+
+
+def gravatar_url(size):
+    """
+    generate URL requiered to request a Gravatar Image
+    using varialbe in config.ini context section:
+        gravatar: your gravatar email address
+    """
+
+    gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(ns.context.gravatar.lower()).hexdigest() + "?"
+    return gravatar_url + urllib.urlencode({'s':str(size)})
 
 
 def static_url(name):
@@ -40,6 +52,7 @@ class StaticWriter(Writer):
 
     def start(self):
         ns.storage.functions.update({'static_url': static_url})
+        ns.storage.functions.update({'gravatar_url': gravatar_url})
         return
 
     def run(self):
