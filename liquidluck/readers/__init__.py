@@ -135,6 +135,14 @@ class Reader(object):
             ns.storage.errors.append(self.filepath)
             return None
 
+        if post.get('modified', None):
+            """ add a new parameter 'modified' in post, it indicates the last post modification date """
+            try:
+                post.modified = self._parse_datetime(post.get('modified'))
+            except ValueError as e:
+                ns.storage.errors.append(self.filepath)
+                return None
+
         for key in post.keys():
             if '_date' in key or '_time' in key:
                 try:
