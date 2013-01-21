@@ -29,7 +29,8 @@ Syntax::
 
 import re
 import logging
-import misaka as m
+#import misaka as m
+import markdown2
 
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
@@ -62,13 +63,14 @@ class MarkdownReader(BaseReader):
         body = to_unicode(body)
         meta = self._parse_meta(header, body)
         content = self._parse_content(body)
+        meta['toc'] = content.toc_html
         return self.post_class(self.filepath, content, meta=meta)
 
     def _parse_content(self, body):
         return markdown(body)
 
     def _parse_meta(self, header, body):
-        header = m.html(to_unicode(header))
+        header = markdown2.markdown(to_unicode(header))
         titles = re.findall(r'<h1>(.*)</h1>', header)
         if not titles:
             logging.error('There is no title')
@@ -86,70 +88,71 @@ class MarkdownReader(BaseReader):
 
         #: keep body in meta data as source text
         meta['source_text'] = body
-        _toc = m.Markdown(m.HtmlTocRenderer(), 0)
-        meta['toc'] = _toc.render(body)
+        # _toc = m.Markdown(m.HtmlTocRenderer(), 0)
+        # meta['toc'] = _toc.render(body)
         return meta
 
 
-class LiquidRender(m.HtmlRenderer, m.SmartyPants):
-    def paragraph(self, text):
-        text = cjk_nowrap(text)
-        return '<p>%s</p>\n' % text
+# class LiquidRender(m.HtmlRenderer, m.SmartyPants):
+#     def paragraph(self, text):
+#         #text = cjk_nowrap(text)
+#         #return '<p>%s</p>\n' % text
+#         return text
 
-    def block_code(self, text, lang):
-        if not lang or lang == '+' or lang == '-':
-            return '\n<pre><code>%s</code></pre>\n' % escape(text.strip())
+#     def block_code(self, text, lang):
+#         if not lang or lang == '+' or lang == '-':
+#             return '\n<pre><code>%s</code></pre>\n' % escape(text.strip())
 
-        hide = lang.endswith('-')
-        inject = lang.endswith('+') or lang.endswith('-')
-        if inject:
-            lang = lang[:-1]
-        inject = inject and lang in ('javascript', 'js', 'css', 'html')
+#         hide = lang.endswith('-')
+#         inject = lang.endswith('+') or lang.endswith('-')
+#         if inject:
+#             lang = lang[:-1]
+#         inject = inject and lang in ('javascript', 'js', 'css', 'html')
 
-        html = ''
-        if inject:
-            if lang == 'javascript' or lang == 'js':
-                tpl = '\n<script>\n%s</script>\n'
-            elif lang == 'css':
-                tpl = '\n<style>\n%s</style>\n'
-            else:
-                tpl = '\n<div class="insert-code">%s</div>\n'
+#         html = ''
+#         if inject:
+#             if lang == 'javascript' or lang == 'js':
+#                 tpl = '\n<script>\n%s</script>\n'
+#             elif lang == 'css':
+#                 tpl = '\n<style>\n%s</style>\n'
+#             else:
+#                 tpl = '\n<div class="insert-code">%s</div>\n'
 
-            html = tpl % text
+#             html = tpl % text
 
-        if hide and inject:
-            return html
+#         if hide and inject:
+#             return html
 
-        variables = settings.reader.get('vars') or {}
-        lexer = get_lexer_by_name(lang, stripall=True)
-        formatter = HtmlFormatter(
-            noclasses=variables.get('highlight_inline', False),
-            linenos=variables.get('highlight_linenos', False),
-        )
-        html += highlight(text, lexer, formatter)
-        return html
+#         variables = settings.reader.get('vars') or {}
+#         lexer = get_lexer_by_name(lang, stripall=True)
+#         formatter = HtmlFormatter(
+#             noclasses=variables.get('highlight_inline', False),
+#             linenos=variables.get('highlight_linenos', False),
+#         )
+#         html += highlight(text, lexer, formatter)
+#         return html
 
-    def autolink(self, link, is_email):
-        if is_email:
-            return '<a href="mailto:%(link)s">%(link)s</a>' % {'link': link}
+#     def autolink(self, link, is_email):
+#         if is_email:
+#             return '<a href="mailto:%(link)s">%(link)s</a>' % {'link': link}
 
-        variables = settings.reader.get('vars') or {}
-        for func in variables.get(
-            'markdown_transform', [
-                'liquidluck.readers.markdown.transform_youtube',
-                'liquidluck.readers.markdown.transform_gist',
-                'liquidluck.readers.markdown.transform_vimeo',
-            ]):
-            func = import_object(func)
-            value = func(link)
-            if value:
-                return value
-        title = link.replace('http://', '').replace('https://', '')
-        return '<a href="%s">%s</a>' % (link, title)
+#         variables = settings.reader.get('vars') or {}
+#         for func in variables.get(
+#             'markdown_transform', [
+#                 'liquidluck.readers.markdown.transform_youtube',
+#                 'liquidluck.readers.markdown.transform_gist',
+#                 'liquidluck.readers.markdown.transform_vimeo',
+#             ]):
+#             func = import_object(func)
+#             value = func(link)
+#             if value:
+#                 return value
+#         title = link.replace('http://', '').replace('https://', '')
+#         return '<a href="%s">%s</a>' % (link, title)
 
 
-#: compatible
-JuneRender = LiquidRender
+# #: compatible
+# JuneRender = LiquidRender
 
 
 def markdown(text):
@@ -159,90 +162,101 @@ def markdown(text):
     regex = re.compile(r'^`````(\w+)', re.M)
     text = regex.sub(r'`````\1-', text)
 
-    render = LiquidRender(flags=m.HTML_USE_XHTML | m.HTML_TOC)
-    md = m.Markdown(
-        render,
-        extensions=(
-            m.EXT_FENCED_CODE | m.EXT_AUTOLINK | m.EXT_TABLES |
-            m.EXT_NO_INTRA_EMPHASIS | m.EXT_STRIKETHROUGH
-        ),
-    )
-    return md.render(text)
+    # render = LiquidRender(flags=m.HTML_USE_XHTML | m.HTML_TOC)
+    # md = m.Markdown(
+    #     render,
+    #     extensions=(
+    #         m.EXT_FENCED_CODE | m.EXT_AUTOLINK | m.EXT_TABLES |
+    #         m.EXT_FOOTNOTES | m.EXT_STRIKETHROUGH
+    #     ),
+    # )
+    # return md.render(text)
+
+    # autolink github
+    link_patterns = [
+        (re.compile(r'([a-zA-Z0-9]+)/([a-zA-Z0-9_\-]+)@([a-fA-F0-9]{40})'), r"http://github.com/\1/\2/commit/\3")
+        ]
+
+    md = markdown2.Markdown(extras={'code-friendly': None, 'fenced-code-blocks': None,
+        'footnotes': None, 'header-ids': 'hid', 'link-patterns': None,
+        'smarty-pants': None, 'toc': None, 'wiki-tables': None},
+        link_patterns = link_patterns)
+    return md.convert(text)
 
 
-_XHTML_ESCAPE_RE = re.compile('[&<>"]')
-_XHTML_ESCAPE_DICT = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}
+# _XHTML_ESCAPE_RE = re.compile('[&<>"]')
+# _XHTML_ESCAPE_DICT = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}
 
 
-def escape(value):
-    """Escapes a string so it is valid within XML or XHTML."""
-    if not isinstance(value, (basestring, type(None))):
-        value = value.decode('utf-8')
-    return _XHTML_ESCAPE_RE.sub(
-        lambda match: _XHTML_ESCAPE_DICT[match.group(0)], value)
+# def escape(value):
+#     """Escapes a string so it is valid within XML or XHTML."""
+#     if not isinstance(value, (basestring, type(None))):
+#         value = value.decode('utf-8')
+#     return _XHTML_ESCAPE_RE.sub(
+#         lambda match: _XHTML_ESCAPE_DICT[match.group(0)], value)
 
 
-#: markdown autolink transform
+# #: markdown autolink transform
 
-def transform_youtube(link):
-    #: youtube.com
-    title = link.replace('http://', '')
-    pattern = r'http://www.youtube.com/watch\?v=([a-zA-Z0-9\-\_]+)'
-    match = re.match(pattern, link)
-    if not match:
-        pattern = r'http://youtu.be/([a-zA-Z0-9\-\_]+)'
-        match = re.match(pattern, link)
-    if match:
-        value = ('<iframe width="560" height="315" src='
-                 '"http://www.youtube.com/embed/%(id)s" '
-                 'frameborder="0" allowfullscreen></iframe>'
-                 '<div><a rel="nofollow" href="%(link)s">'
-                 '%(title)s</a></div>'
-                ) % {'id': match.group(1), 'link': link, 'title': title}
-        return value
-    return None
-
-
-def transform_gist(link):
-    #: gist support
-    title = link.replace('http://', '').replace('https://', '')
-    pattern = r'(https?://gist.github.com/[\d]+)'
-    match = re.match(pattern, link)
-    if match:
-        value = ('<script src="%(link)s.js"></script>'
-                 '<div><a rel="nofollow" href="%(link)s">'
-                 '%(title)s</a></div>'
-                ) % {'link': match.group(1), 'title': title}
-        return value
-    return None
+# def transform_youtube(link):
+#     #: youtube.com
+#     title = link.replace('http://', '')
+#     pattern = r'http://www.youtube.com/watch\?v=([a-zA-Z0-9\-\_]+)'
+#     match = re.match(pattern, link)
+#     if not match:
+#         pattern = r'http://youtu.be/([a-zA-Z0-9\-\_]+)'
+#         match = re.match(pattern, link)
+#     if match:
+#         value = ('<iframe width="560" height="315" src='
+#                  '"http://www.youtube.com/embed/%(id)s" '
+#                  'frameborder="0" allowfullscreen></iframe>'
+#                  '<div><a rel="nofollow" href="%(link)s">'
+#                  '%(title)s</a></div>'
+#                 ) % {'id': match.group(1), 'link': link, 'title': title}
+#         return value
+#     return None
 
 
-def transform_vimeo(link):
-    #: vimeo.com
-    title = link.replace('http://', '')
-    pattern = r'http://vimeo.com/([\d]+)'
-    match = re.match(pattern, link)
-    if match:
-        value = ('<iframe width="500" height="281" frameborder="0" '
-                 'src="http://player.vimeo.com/video/%(id)s" '
-                 'allowFullScreen></iframe>'
-                 '<div><a rel="nofollow" href="%(link)s">'
-                 '%(title)s</a></div>'
-                ) % {'id': match.group(1), 'link': link, 'title': title}
-        return value
-    return None
+# def transform_gist(link):
+#     #: gist support
+#     title = link.replace('http://', '').replace('https://', '')
+#     pattern = r'(https?://gist.github.com/[\d]+)'
+#     match = re.match(pattern, link)
+#     if match:
+#         value = ('<script src="%(link)s.js"></script>'
+#                  '<div><a rel="nofollow" href="%(link)s">'
+#                  '%(title)s</a></div>'
+#                 ) % {'link': match.group(1), 'title': title}
+#         return value
+#     return None
 
 
-def transform_screenr(link):
-    title = link.replace('http://', '')
-    pattern = r'http://www.screenr.com/([a-zA-Z0-9]+)'
-    match = re.match(pattern, link)
-    if match:
-        value = ('<iframe width="500" height="305" frameborder="0" '
-                 'src="http://www.screenr.com/embed/%(id)s" '
-                 'allowFullScreen></iframe>'
-                 '<div><a rel="nofollow" href="%(link)s">'
-                 '%(title)s</a></div>'
-                ) % {'id': match.group(1), 'link': link, 'title': title}
-        return value
-    return None
+# def transform_vimeo(link):
+#     #: vimeo.com
+#     title = link.replace('http://', '')
+#     pattern = r'http://vimeo.com/([\d]+)'
+#     match = re.match(pattern, link)
+#     if match:
+#         value = ('<iframe width="500" height="281" frameborder="0" '
+#                  'src="http://player.vimeo.com/video/%(id)s" '
+#                  'allowFullScreen></iframe>'
+#                  '<div><a rel="nofollow" href="%(link)s">'
+#                  '%(title)s</a></div>'
+#                 ) % {'id': match.group(1), 'link': link, 'title': title}
+#         return value
+#     return None
+
+
+# def transform_screenr(link):
+#     title = link.replace('http://', '')
+#     pattern = r'http://www.screenr.com/([a-zA-Z0-9]+)'
+#     match = re.match(pattern, link)
+#     if match:
+#         value = ('<iframe width="500" height="305" frameborder="0" '
+#                  'src="http://www.screenr.com/embed/%(id)s" '
+#                  'allowFullScreen></iframe>'
+#                  '<div><a rel="nofollow" href="%(link)s">'
+#                  '%(title)s</a></div>'
+#                 ) % {'id': match.group(1), 'link': link, 'title': title}
+#         return value
+#     return None
