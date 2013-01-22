@@ -155,6 +155,57 @@ class MarkdownReader(BaseReader):
 # JuneRender = LiquidRender
 
 
+class LLMarkdown(markdown2.Markdown):
+
+    def header_no(self, n):
+        # exclude h1 header
+        if n == 1:
+            return ''
+
+        n = n - 1
+        if n > len(self._headers):
+            self._headers.append(1)
+        elif n == len(self._headers):
+            self._headers[-1] += 1
+        else:
+            # Example: n == 1, _headers = [1,3,2]  =>  _headers = [2]
+            del self._headers[n:]
+            self._headers[-1] += 1
+        return '.'.join(map(str, self._headers))
+
+    def header_id_from_text(self, text, prefix, n):
+        header_id = self.header_no(n)
+        if prefix and isinstance(prefix, base_string_type):
+            header_id = prefix + '-' + header_id
+        header_id_text = markdown2._slugify(text)
+        if header_id_text:
+            header_id = '%s-%s' % (header_id, header_id_text)
+        return header_id
+
+    def _toc_add_entry(self, level, id, name):
+        if self._toc is None:
+            self._toc = []
+
+        variables = settings.reader.get('vars') or {}
+        toc_auto_number = variables.get('markdown_toc_auto_number')
+        if isinstance(toc_auto_number, bool) and toc_auto_number:
+            # get header_no from header_id
+            prefix = self.extras["header-ids"]
+            if prefix and isinstance(prefix, base_string_type):
+                header_no = id.replace(prefix + '-', '')
+            else:
+                header_no = id
+            header_no = header_no.split('-')[0] + ' '
+        else:
+            header_no = ''
+
+        self._toc.append((level, id, header_no + self._unescape_special_chars(name)))
+
+    def reset(self):
+        super(LLMarkdown, self).reset()
+        self._headers = [] # stack of current count for that hN header
+
+
 def markdown(text):
     text = to_unicode(text)
     regex = re.compile(r'^````(\w+)', re.M)
@@ -177,9 +228,8 @@ def markdown(text):
         (re.compile(r'([a-zA-Z0-9]+)/([a-zA-Z0-9_\-]+)@([a-fA-F0-9]{40})'), r"http://github.com/\1/\2/commit/\3")
         ]
 
-    md = markdown2.Markdown(extras={'code-friendly': None, 'fenced-code-blocks': None,
-        'footnotes': None, 'header-ids': 'hid', 'link-patterns': None,
-        'smarty-pants': None, 'toc': None, 'wiki-tables': None},
+    md = LLMarkdown(extras=['code-friendly', 'fenced-code-blocks', 'footnotes', 'link-patterns',
+        'smarty-pants', 'toc', 'wiki-tables'],
         link_patterns = link_patterns)
     return md.convert(text)
 
