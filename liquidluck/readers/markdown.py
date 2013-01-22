@@ -144,6 +144,7 @@ class LLMarkdown(markdown2.Markdown):
             return ''
 
         n = n - 1
+        # code from trentm@github (https://github.com/trentm/python-markdown2/issues/85)
         if n > len(self._headers):
             self._headers.append(1)
         elif n == len(self._headers):
