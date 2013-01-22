@@ -132,25 +132,6 @@ class MarkdownReader(BaseReader):
 #         html += highlight(text, lexer, formatter)
 #         return html
 
-#     def autolink(self, link, is_email):
-#         if is_email:
-#             return '<a href="mailto:%(link)s">%(link)s</a>' % {'link': link}
-
-#         variables = settings.reader.get('vars') or {}
-#         for func in variables.get(
-#             'markdown_transform', [
-#                 'liquidluck.readers.markdown.transform_youtube',
-#                 'liquidluck.readers.markdown.transform_gist',
-#                 'liquidluck.readers.markdown.transform_vimeo',
-#             ]):
-#             func = import_object(func)
-#             value = func(link)
-#             if value:
-#                 return value
-#         title = link.replace('http://', '').replace('https://', '')
-#         return '<a href="%s">%s</a>' % (link, title)
-
-
 # #: compatible
 # JuneRender = LiquidRender
 
@@ -201,6 +182,21 @@ class LLMarkdown(markdown2.Markdown):
 
         self._toc.append((level, id, header_no + self._unescape_special_chars(name)))
 
+    def _do_auto_links(self, text):
+        variables = settings.reader.get('vars') or {}
+        for func in variables.get(
+            'markdown_transform', [
+                'liquidluck.readers.markdown.transform_youtube',
+                'liquidluck.readers.markdown.transform_gist',
+                'liquidluck.readers.markdown.transform_vimeo',
+                'liquidluck.readers.markdown.transform_github',
+            ]):
+            func = import_object(func)
+            text = func(text)
+
+        text = super(LLMarkdown, self)._do_auto_links(text)
+        return text
+
     def reset(self):
         super(LLMarkdown, self).reset()
         self._headers = [] # stack of current count for that hN header
@@ -223,14 +219,8 @@ def markdown(text):
     # )
     # return md.render(text)
 
-    # autolink github
-    link_patterns = [
-        (re.compile(r'([a-zA-Z0-9]+)/([a-zA-Z0-9_\-]+)@([a-fA-F0-9]{40})'), r"http://github.com/\1/\2/commit/\3")
-        ]
-
-    md = LLMarkdown(extras=['code-friendly', 'fenced-code-blocks', 'footnotes', 'link-patterns',
-        'smarty-pants', 'toc', 'wiki-tables'],
-        link_patterns = link_patterns)
+    md = LLMarkdown(extras=['code-friendly', 'fenced-code-blocks', 'footnotes',
+        'toc', 'wiki-tables'])
     return md.convert(text)
 
 
@@ -246,67 +236,80 @@ def markdown(text):
 #         lambda match: _XHTML_ESCAPE_DICT[match.group(0)], value)
 
 
-# #: markdown autolink transform
+#: markdown autolink transform
 
-# def transform_youtube(link):
-#     #: youtube.com
-#     title = link.replace('http://', '')
-#     pattern = r'http://www.youtube.com/watch\?v=([a-zA-Z0-9\-\_]+)'
-#     match = re.match(pattern, link)
-#     if not match:
-#         pattern = r'http://youtu.be/([a-zA-Z0-9\-\_]+)'
-#         match = re.match(pattern, link)
-#     if match:
-#         value = ('<iframe width="560" height="315" src='
-#                  '"http://www.youtube.com/embed/%(id)s" '
-#                  'frameborder="0" allowfullscreen></iframe>'
-#                  '<div><a rel="nofollow" href="%(link)s">'
-#                  '%(title)s</a></div>'
-#                 ) % {'id': match.group(1), 'link': link, 'title': title}
-#         return value
-#     return None
+def transform_youtube(text):
+    #: youtube.com
+    def auto_youtube_link_sub(match):
+        link = match.group(0)[1:][:-1]
+        title = link.replace('http://','')
+        return ('<iframe width="560" height="315" src='
+                '"http://www.youtube.com/embed/%(id)s" '
+                'frameborder="0" allowfullscreen></iframe>'
+                '<span><a rel="nofollow" href="%(link)s">'
+                '%(title)s</a></span>'
+                ) % {'id': match.group(1), 'link': link, 'title': title}
 
-
-# def transform_gist(link):
-#     #: gist support
-#     title = link.replace('http://', '').replace('https://', '')
-#     pattern = r'(https?://gist.github.com/[\d]+)'
-#     match = re.match(pattern, link)
-#     if match:
-#         value = ('<script src="%(link)s.js"></script>'
-#                  '<div><a rel="nofollow" href="%(link)s">'
-#                  '%(title)s</a></div>'
-#                 ) % {'link': match.group(1), 'title': title}
-#         return value
-#     return None
+    auto_youtube_link_re = re.compile(r'<http://www.youtube.com/watch\?v=([a-zA-Z0-9\-\_]+)>', re.I)
+    text = auto_youtube_link_re.sub(auto_youtube_link_sub, text)
+    auto_youtube_link_re = re.compile(r'<http://youtu.be/([a-zA-Z0-9\-\_]+)>', re.I)
+    return auto_youtube_link_re.sub(auto_youtube_link_sub, text)
 
 
-# def transform_vimeo(link):
-#     #: vimeo.com
-#     title = link.replace('http://', '')
-#     pattern = r'http://vimeo.com/([\d]+)'
-#     match = re.match(pattern, link)
-#     if match:
-#         value = ('<iframe width="500" height="281" frameborder="0" '
-#                  'src="http://player.vimeo.com/video/%(id)s" '
-#                  'allowFullScreen></iframe>'
-#                  '<div><a rel="nofollow" href="%(link)s">'
-#                  '%(title)s</a></div>'
-#                 ) % {'id': match.group(1), 'link': link, 'title': title}
-#         return value
-#     return None
+def transform_gist(text):
+    #: gist support
+    def auto_gist_link_sub(match):
+        link = match.group(1)
+        title = link.replace('http://', '').replace('https://', '')
+        return ('<script src="%(link)s.js"></script>'
+                '<span><a rel="nofollow" href="%(link)s">'
+                '%(title)s</a></span>'
+                ) % {'link': link, 'title': title}
+
+    auto_gist_link_re = re.compile(r'<(https?://gist.github.com/[\d]+)>', re.I)
+    return auto_gist_link_re.sub(auto_gist_link_sub, text)
 
 
-# def transform_screenr(link):
-#     title = link.replace('http://', '')
-#     pattern = r'http://www.screenr.com/([a-zA-Z0-9]+)'
-#     match = re.match(pattern, link)
-#     if match:
-#         value = ('<iframe width="500" height="305" frameborder="0" '
-#                  'src="http://www.screenr.com/embed/%(id)s" '
-#                  'allowFullScreen></iframe>'
-#                  '<div><a rel="nofollow" href="%(link)s">'
-#                  '%(title)s</a></div>'
-#                 ) % {'id': match.group(1), 'link': link, 'title': title}
-#         return value
-#     return None
+def transform_vimeo(text):
+    #: vimeo.com
+    def auto_vimeo_link_sub(match):
+        link = match.group(0)[1:][:-1]
+        title = link.replace('http://','')
+        return ('<iframe width="500" height="281" frameborder="0" '
+                'src="http://player.vimeo.com/video/%(id)s" '
+                'allowFullScreen></iframe>'
+                '<span><a rel="nofollow" href="%(link)s">'
+                '%(title)s</a></span>'
+                ) % {'id': match.group(1), 'link': link, 'title': title}
+
+    auto_vimeo_link_re = re.compile(r'<http://vimeo.com/([\d]+)>', re.I)
+    return auto_vimeo_link_re.sub(auto_vimeo_link_sub, text)
+
+
+def transform_screenr(text):
+    #: screenr.com
+    def auto_screenr_link_sub(match):
+        link = match.group(0)[1:][:-1]
+        title = link.replace('http://','')
+        return ('<iframe width="500" height="305" frameborder="0" '
+                'src="http://www.screenr.com/embed/%(id)s" '
+                'allowFullScreen></iframe>'
+                '<span><a rel="nofollow" href="%(link)s">'
+                '%(title)s</a></span>'
+                ) % {'id': match.group(1), 'link': link, 'title': title}
+
+    auto_screenr_link_re = re.compile(r'<http://www.screenr.com/([a-zA-Z0-9]+)>', re.I)
+    return auto_screenr_link_re.sub(auto_screenr_link_sub, text)
+
+
+def transform_github(text):
+    #: github
+    def auto_github_link_sub(match):
+        link = 'http://github.com/%s/%s/commit/%s' % (match.group(1), match.group(2), match.group(3))
+        title = '%s/%s@%s' % (match.group(1), match.group(2), match.group(3)[:7])
+        return ('<a rel="nofollow" href="%(link)s">'
+                '%(title)s</a>'
+                ) % {'link': link, 'title': title}
+
+    auto_github_link_re = re.compile(r'([a-zA-Z0-9]+)/([a-zA-Z0-9_\-]+)@([a-fA-F0-9]{40})')
+    return auto_github_link_re.sub(auto_github_link_sub, text)
