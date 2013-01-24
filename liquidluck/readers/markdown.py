@@ -329,11 +329,13 @@ def transform_screenr(text):
 def transform_github(text):
     #: github
     def auto_github_link_sub(match):
-        link = 'http://github.com/%s/%s/commit/%s' % (match.group(1), match.group(2), match.group(3))
+        link = 'https://github.com/%s/%s/commit/%s' % (match.group(1), match.group(2), match.group(3))
         title = '%s/%s@%s' % (match.group(1), match.group(2), match.group(3)[:7])
         return ('<a rel="nofollow" href="%(link)s">'
                 '%(title)s</a>'
                 ) % {'link': link, 'title': title}
 
     auto_github_link_re = re.compile(r'([a-zA-Z0-9]+)/([a-zA-Z0-9_\-]+)@([a-fA-F0-9]{40})')
-    return auto_github_link_re.sub(auto_github_link_sub, text)
+    auto_github_link2_re = re.compile(r'<https?://github.com/([a-zA-Z0-9]+)/([a-zA-Z0-9_\-]+)/commit/([a-fA-F0-9]{40})>')
+    text = auto_github_link_re.sub(auto_github_link_sub, text)
+    return auto_github_link2_re.sub(auto_github_link_sub, text)
