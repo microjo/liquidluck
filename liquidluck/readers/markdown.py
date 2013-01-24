@@ -198,6 +198,29 @@ class LLMarkdown(markdown2.Markdown):
         text = super(LLMarkdown, self)._do_auto_links(text)
         return text
 
+    def _sort_footnotes(self, text):
+        """ ref: https://github.com/an0/python-markdown2/commit/ab1aad66cc7b3ae2f66ecf3af22b9ef71b98b381
+        Because _do_links is not applied to the text in text flow order,
+        footnotes are not generated in proper order,
+        we have to sort them before _add_footnotes.
+        """
+        _footnote_tag_re = re.compile(r'''<sup class="footnote-ref" id="fnref-(.+)"><a href="#fn-\1">(\d+)</a></sup>''')
+        self.footnote_ids = []
+        def _repl(match):
+            id = match.group(1)
+            num = match.group(2)
+            if id in self.footnotes:
+                if id not in self.footnote_ids: # prevent insert duplicates
+                    self.footnote_ids.append(id)
+                return match.string[match.start(0):match.start(2)] + str(self.footnote_ids.index(id) + 1) + match.string[match.end(2):match.end(0)]
+            else:
+                return match.string[match.start():match.end()]
+        return _footnote_tag_re.sub(_repl, text)
+
+    def _add_footnotes(self, text):
+        text = self._sort_footnotes(text)
+        return super(LLMarkdown, self)._add_footnotes(text)
+
     def reset(self):
         super(LLMarkdown, self).reset()
         self._headers = [] # stack of current count for that hN header
