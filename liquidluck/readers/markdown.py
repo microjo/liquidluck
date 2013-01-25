@@ -93,45 +93,6 @@ class MarkdownReader(BaseReader):
         return meta
 
 
-# class LiquidRender(m.HtmlRenderer, m.SmartyPants):
-#     def paragraph(self, text):
-#         #text = cjk_nowrap(text)
-#         #return '<p>%s</p>\n' % text
-#         return text
-
-#     def block_code(self, text, lang):
-#         if not lang or lang == '+' or lang == '-':
-#             return '\n<pre><code>%s</code></pre>\n' % escape(text.strip())
-
-#         hide = lang.endswith('-')
-#         inject = lang.endswith('+') or lang.endswith('-')
-#         if inject:
-#             lang = lang[:-1]
-#         inject = inject and lang in ('javascript', 'js', 'css', 'html')
-
-#         html = ''
-#         if inject:
-#             if lang == 'javascript' or lang == 'js':
-#                 tpl = '\n<script>\n%s</script>\n'
-#             elif lang == 'css':
-#                 tpl = '\n<style>\n%s</style>\n'
-#             else:
-#                 tpl = '\n<div class="insert-code">%s</div>\n'
-
-#             html = tpl % text
-
-#         if hide and inject:
-#             return html
-
-#         variables = settings.reader.get('vars') or {}
-#         lexer = get_lexer_by_name(lang, stripall=True)
-#         formatter = HtmlFormatter(
-#             noclasses=variables.get('highlight_inline', False),
-#             linenos=variables.get('highlight_linenos', False),
-#         )
-#         html += highlight(text, lexer, formatter)
-#         return html
-
 # #: compatible
 # JuneRender = LiquidRender
 
