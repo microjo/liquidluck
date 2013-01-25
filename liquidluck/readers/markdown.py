@@ -265,19 +265,19 @@ def markdown(text):
 def transform_youtube(text):
     #: youtube.com
     def auto_youtube_link_sub(match):
-        link = match.group(0)[1:][:-1]
+        link = match.group(1)
         title = link.replace('http://','')
         return ('<iframe width="560" height="315" src='
                 '"http://www.youtube.com/embed/%(id)s" '
                 'frameborder="0" allowfullscreen></iframe>'
                 '<span><a rel="nofollow" href="%(link)s">'
                 '%(title)s</a></span>'
-                ) % {'id': match.group(1), 'link': link, 'title': title}
+                ) % {'id': match.group(2), 'link': link, 'title': title}
 
-    auto_youtube_link_re = re.compile(r'<http://www.youtube.com/watch\?v=([a-zA-Z0-9\-\_]+)>', re.I)
+    auto_youtube_link_re = re.compile(r'<(http://www.youtube.com/watch\?v=([a-zA-Z0-9\-\_]+))>', re.I)
+    auto_youtube_link2_re = re.compile(r'<(http://youtu.be/([a-zA-Z0-9\-\_]+))>', re.I)
     text = auto_youtube_link_re.sub(auto_youtube_link_sub, text)
-    auto_youtube_link_re = re.compile(r'<http://youtu.be/([a-zA-Z0-9\-\_]+)>', re.I)
-    return auto_youtube_link_re.sub(auto_youtube_link_sub, text)
+    return auto_youtube_link2_re.sub(auto_youtube_link_sub, text)
 
 
 def transform_gist(text):
@@ -297,32 +297,32 @@ def transform_gist(text):
 def transform_vimeo(text):
     #: vimeo.com
     def auto_vimeo_link_sub(match):
-        link = match.group(0)[1:][:-1]
+        link = match.group(1)
         title = link.replace('http://','')
         return ('<iframe width="500" height="281" frameborder="0" '
                 'src="http://player.vimeo.com/video/%(id)s" '
                 'allowFullScreen></iframe>'
                 '<span><a rel="nofollow" href="%(link)s">'
                 '%(title)s</a></span>'
-                ) % {'id': match.group(1), 'link': link, 'title': title}
+                ) % {'id': match.group(2), 'link': link, 'title': title}
 
-    auto_vimeo_link_re = re.compile(r'<http://vimeo.com/([\d]+)>', re.I)
+    auto_vimeo_link_re = re.compile(r'<(http://vimeo.com/([\d]+))>', re.I)
     return auto_vimeo_link_re.sub(auto_vimeo_link_sub, text)
 
 
 def transform_screenr(text):
     #: screenr.com
     def auto_screenr_link_sub(match):
-        link = match.group(0)[1:][:-1]
+        link = match.group(1)
         title = link.replace('http://','')
         return ('<iframe width="500" height="305" frameborder="0" '
                 'src="http://www.screenr.com/embed/%(id)s" '
                 'allowFullScreen></iframe>'
                 '<span><a rel="nofollow" href="%(link)s">'
                 '%(title)s</a></span>'
-                ) % {'id': match.group(1), 'link': link, 'title': title}
+                ) % {'id': match.group(2), 'link': link, 'title': title}
 
-    auto_screenr_link_re = re.compile(r'<http://www.screenr.com/([a-zA-Z0-9]+)>', re.I)
+    auto_screenr_link_re = re.compile(r'<(http://www.screenr.com/([a-zA-Z0-9]+))>', re.I)
     return auto_screenr_link_re.sub(auto_screenr_link_sub, text)
 
 
