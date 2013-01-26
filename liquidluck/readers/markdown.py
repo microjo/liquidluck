@@ -120,6 +120,8 @@ class LLMarkdown(markdown2.Markdown):
         header_id = self.header_no(n)
         if prefix and isinstance(prefix, base_string_type):
             header_id = prefix + '-' + header_id
+        else:
+            header_id = 'h' + header_id
         header_id_text = markdown2._slugify(text)
         if header_id_text:
             header_id = '%s-%s' % (header_id, header_id_text)
@@ -137,7 +139,7 @@ class LLMarkdown(markdown2.Markdown):
             if prefix and isinstance(prefix, base_string_type):
                 header_no = id.replace(prefix + '-', '')
             else:
-                header_no = id
+                header_no = id[1:]
             header_no = header_no.split('-')[0] + ' '
         else:
             header_no = ''
